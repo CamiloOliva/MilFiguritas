@@ -25,7 +25,9 @@ export async function verifyRelease(root){
   const source=[];
   for(const file of files){
     if(/(^|\/)(data|node_modules|\.openai|output|dist)(\/|$)|(^|\/)\.env$|\.sqlite(?:-|$)|ACCESO-ADMIN\.txt$/.test(file))throw new Error('Archivo privado en la publicación: '+file);
-    const content=await readFile(path.join(root,file),'utf8');
+    const buffer=await readFile(path.join(root,file));
+    if(/\.(mp4|webp)$/.test(file)){if(buffer.length>25*1024*1024)throw new Error('Recurso multimedia demasiado grande: '+file);source.push({path:file,bytes:buffer.length,binary:true});continue;}
+    const content=buffer.toString('utf8');
     if(/(?:ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)/.test(content))throw new Error('Posible credencial privada en: '+file);
     if(privatePasswords.some(secret=>content.includes(secret)))throw new Error('La publicación contiene una contraseña administrativa privada: '+file);
     source.push({path:file,content});

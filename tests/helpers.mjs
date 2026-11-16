@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {handleApi,initialState} from '../src/app.mjs';
 
 export const ADMIN_PASSWORD='PrivateAdmin2026!';
-export const sampleOrder=(extra={})=>({product:'Desayuno Amanecer',delivery:new Date(Date.now()+72*3600000).toISOString(),occasion:'Cumpleaños',recipient:'Persona de prueba',message:'¡Que tengas un día inolvidable!',color:'Rosa',contactPhone:'3001234567',deliveryMethod:'delivery',address:'Calle de prueba 123, Bucaramanga',requestId:crypto.randomUUID(),...extra});
+export const sampleOrder=(extra={})=>({product:'Desayuno Amanecer',delivery:new Date(Date.now()+72*3600000).toISOString(),occasion:'Cumpleaños',recipient:'Persona de prueba',message:'¡Que tengas un día inolvidable!',color:'Rosa',contactPhone:'3001234567',deliveryMethod:'delivery',address:'Calle de prueba 123, Bucaramanga',requestId:crypto.randomUUID(),breakfast:{size:'large',main:'both',side:'both',drink:'soda',sweetPreference:'arequipe',customSweet:'',alcoholConfirmed:false},...extra});
 
 export async function setup(){
   let state=await initialState({adminPassword:ADMIN_PASSWORD});let queue=Promise.resolve();

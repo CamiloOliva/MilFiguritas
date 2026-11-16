@@ -1,12 +1,11 @@
-export class AppError extends Error { constructor(message, status=400) { super(message); this.status=status; } }
-export function requireThat(condition,message,status=400) { if(!condition) throw new AppError(message,status); }
+import {AppError,requireThat,text,positiveInteger} from './validation.mjs';
+export {AppError,requireThat,text,positiveInteger} from './validation.mjs';
+import {validateServiceOptions} from './catalog.mjs';
 export const LEVELS=[{name:'Aprendiz de Detalles',min:0},{name:'Creador de Sorpresas',min:300},{name:'Cliente VIP',min:800}];
 export function levelFor(xp) { return [...LEVELS].reverse().find(l=>xp>=l.min)||LEVELS[0]; }
-export function text(value,min=1,max=160) { requireThat(typeof value==='string','Completa los campos requeridos.'); const v=value.trim(); requireThat(v.length>=min&&v.length<=max,`El texto debe tener entre ${min} y ${max} caracteres.`); return v; }
-export function positiveInteger(value,max=100000) { requireThat(Number.isInteger(value)&&value>0&&value<=max,'Introduce un número entero positivo válido.'); return value; }
 export function leadHours(delivery,now=Date.now()) { const ms=Date.parse(delivery); requireThat(Number.isFinite(ms),'Selecciona una fecha válida.'); return (ms-now)/3600000; }
 export function validateReservation(input,now=Date.now()) {
- const products=['Desayuno Amanecer','Caja de Momentos','Celebración Especial'];
+ const products=['Desayuno Amanecer','Caja de Momentos','Celebración Especial','Decoración de eventos'];
  requireThat(products.includes(input.product),'Selecciona un detalle del catálogo.');
  requireThat(leadHours(input.delivery,now)>=48,'Reserva con al menos 48 horas de anticipación.');
  requireThat(leadHours(input.delivery,now)<=2160,'Puedes reservar hasta 90 días antes.');
@@ -14,7 +13,7 @@ export function validateReservation(input,now=Date.now()) {
  requireThat(/^3\d{9}$/.test(contactPhone),'Escribe un celular colombiano válido de 10 dígitos.');
  requireThat(['delivery','pickup'].includes(input.deliveryMethod),'Selecciona envío a domicilio o recogida.');
  const address=input.deliveryMethod==='delivery'?text(input.address,8,180):'';
- return {product:input.product,delivery:new Date(input.delivery).toISOString(),occasion:text(input.occasion,2,40),recipient:text(input.recipient,2,80),message:text(input.message,2,280),color:['Rosa','Lavanda','Durazno'].includes(input.color)?input.color:'Rosa',contactPhone,deliveryMethod:input.deliveryMethod,address};
+ return {product:input.product,delivery:new Date(input.delivery).toISOString(),occasion:text(input.occasion,2,40),recipient:text(input.recipient,2,80),message:text(input.message,2,280),color:['Rosa','Lavanda','Durazno','Personalizada'].includes(input.color)?input.color:'Rosa',contactPhone,deliveryMethod:input.deliveryMethod,address,...validateServiceOptions(input)};
 }
 export function award(state,user,amount,reason,key,now=new Date().toISOString()) { requireThat(!state.ledger.some(l=>l.key===key),'Esta acción ya recibió sus puntos.',409); positiveInteger(amount,10000); user.xp+=amount; user.balance+=amount; state.ledger.push({id:crypto.randomUUID(),userId:user.id,amount,reason,key,at:now}); return amount; }
 export function redeem(state,user,reward,now=Date.now()) { requireThat(reward&&reward.active,'La recompensa no está disponible.',404); requireThat(reward.stock>0,'Esta recompensa está agotada.',409); requireThat(user.balance>=reward.cost,'Todavía no tienes los puntos necesarios.',409); requireThat(!state.coupons.some(c=>c.userId===user.id&&c.rewardId===reward.id&&c.status==='issued'&&Date.parse(c.expiresAt)>now),'Ya tienes un cupón vigente para esta recompensa.',409); user.balance-=reward.cost; reward.stock--; const coupon={id:crypto.randomUUID(),userId:user.id,rewardId:reward.id,title:reward.title,cost:reward.cost,code:'MFG-'+crypto.randomUUID().slice(0,8).toUpperCase(),status:'issued',issuedAt:new Date(now).toISOString(),expiresAt:new Date(now+30*86400000).toISOString()}; state.coupons.push(coupon); state.ledger.push({id:crypto.randomUUID(),userId:user.id,amount:-reward.cost,reason:'Canje: '+reward.title,key:'redeem:'+coupon.id,at:coupon.issuedAt}); return coupon; }

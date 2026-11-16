@@ -1,4 +1,5 @@
 import http from 'node:http';
+import {serveStatic} from './src/static.mjs';
 import path from 'node:path';
 import {DatabaseSync,backup} from 'node:sqlite';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
@@ -57,8 +58,9 @@ const store={
   }
 };
 
-const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml'};
+const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.mp4':'video/mp4','.webp':'image/webp'};
 const allowed={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/orders.js':'orders.js','/profile.js':'profile.js','/style.css':'style.css','/profile.css':'profile.css','/orders.css':'orders.css','/favicon.svg':'favicon.svg'};
+for(const file of ['catalog.js','showcase.js','showcase.css','responsive.css','media/milfiguras-presentacion-v1.mp4','media/milfiguras-avance-v1.mp4','media/milfiguras-poster-v1.webp'])allowed['/'+file]=file;
 const securityHeaders={
   'X-Content-Type-Options':'nosniff',
   'Referrer-Policy':'same-origin',
@@ -94,8 +96,7 @@ const server=http.createServer(async(req,res)=>{
     if(!['GET','HEAD'].includes(req.method)){res.writeHead(405,{Allow:'GET, HEAD'});res.end();return;}
     const file=allowed[url.pathname];
     if(!file){res.writeHead(404);res.end('No encontrado');return;}
-    res.writeHead(200,{'Content-Type':types[path.extname(file)],'Cache-Control':'no-cache'});
-    res.end(req.method==='HEAD'?undefined:await readFile(path.join(root,'public',file)));
+    await serveStatic(req,res,path.join(root,'public',file),types[path.extname(file)],file.startsWith('media/'));
   }catch(error){
     console.error('No se pudo procesar una solicitud:',error.name);
     if(!res.headersSent)res.writeHead(500,{'Content-Type':'application/json'});

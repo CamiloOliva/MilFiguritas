@@ -13,11 +13,11 @@ async function application(f,role='admin'){
  const w=dom.window;
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
  w.HTMLDialogElement.prototype.close=function(){this.open=false;};
- w.matchMedia=()=>({matches:true});w.scrollTo=()=>{};
+ w.matchMedia=()=>({matches:true});w.scrollTo=()=>{};w.HTMLMediaElement.prototype.play=async function(){};w.HTMLMediaElement.prototype.pause=function(){};
  Object.defineProperty(w.crypto,'randomUUID',{value:()=>crypto.randomUUID()});
  Object.defineProperty(w.navigator,'clipboard',{value:{writeText:async()=>{}}});
  w.fetch=async(path,options={})=>{calls.push({path,body:options.body?JSON.parse(options.body):undefined});return f.send(path.replace('/api/',''),options.body?JSON.parse(options.body):null,cookie);};
- for(const script of ['profile.js','orders.js','app.js'])vm.runInContext(await readFile(new URL('../public/'+script,import.meta.url),'utf8'),dom.getInternalVMContext());
+ for(const script of ['catalog.js','showcase.js','profile.js','orders.js','app.js'])vm.runInContext(await readFile(new URL('../public/'+script,import.meta.url),'utf8'),dom.getInternalVMContext());
  try{await until(()=>w.document.querySelector('.shell'));}catch(error){w.close();throw new Error(error.message+' '+errors.join('; '));}
  return {dom,w,calls,errors,click:selector=>{const button=w.document.querySelector(selector);assert.ok(button,'Botón no encontrado: '+selector);button.click();},submit:form=>form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}))};
 }
@@ -87,9 +87,76 @@ test('la pantalla pública no contiene accesos directos ni la contraseña antigu
  const f=await setup(),dom=new JSDOM('<div id="app"></div><div id="toast"></div><dialog id="modal"></dialog>',{url:'http://localhost',runScripts:'outside-only'}),w=dom.window;
  try{
   w.fetch=async()=>new Response(JSON.stringify({error:'Inicia sesión.'}),{status:401});w.matchMedia=()=>({matches:true});
-  for(const script of ['profile.js','orders.js','app.js'])vm.runInContext(await readFile(new URL('../public/'+script,import.meta.url),'utf8'),dom.getInternalVMContext());
+  for(const script of ['catalog.js','showcase.js','profile.js','orders.js','app.js'])vm.runInContext(await readFile(new URL('../public/'+script,import.meta.url),'utf8'),dom.getInternalVMContext());
   await until(()=>w.document.querySelector('#auth-form'));assert.equal(w.document.querySelector('[data-action="demo"]'),null);
   assert.ok(!w.document.body.innerHTML.includes('Milfiguras2026!'));assert.equal(w.document.querySelector('input[type="password"]').required,true);
   assert.equal((await f.request('login',{email:'admin@milfiguras.demo',password:'Milfiguras2026!'})).status,401);
  }finally{w.close();}
+});
+
+test('personalizar desayuno pequeño actualiza restricciones y envía las opciones a WhatsApp',async()=>{
+ const f=await setup(),app=await application(f,'explorer');
+ try{
+  app.click('[data-page="create"]');await until(()=>app.w.document.querySelector('[data-size="small"]'));app.click('[data-size="small"]');
+  const form=app.w.document.querySelector('#reservation-form'),change=(name,value)=>{const field=form.elements.namedItem(name);field.value=value;field.dispatchEvent(new app.w.Event('change',{bubbles:true}));};
+  assert.equal(form.elements.namedItem('breakfastMain').options.length,2);assert.equal(form.elements.namedItem('breakfastSide').options.length,2);assert.equal(form.querySelector('#sweet-choice-field').hidden,true);
+  change('breakfastMain','pancakes');change('breakfastSide','sweet');change('sweetPreference','other');change('customSweet','Chocolate blanco');
+  assert.equal(form.elements.namedItem('customSweet').required,true);
+  change('breakfastDrink','beer');assert.equal(form.elements.namedItem('alcoholConfirmed').required,true);change('breakfastDrink','soda');assert.equal(form.elements.namedItem('alcoholConfirmed').required,false);
+  for(const [key,value] of Object.entries({recipient:'Persona especial',contactPhone:'3001234567',address:'Calle de prueba 123',message:'Un día inolvidable',giftDetails:'Globos de cumpleaños'}))form.elements.namedItem(key).value=value;
+  app.submit(form);await until(()=>app.w.document.querySelector('.whatsapp-btn'));
+  const text=new URL(app.w.document.querySelector('.whatsapp-btn').href).searchParams.get('text');
+  for(const expected of ['Pequeño','Panqueques con huevo','Chocolate blanco','Globos de cumpleaños'])assert.ok(text.includes(expected),expected);
+  assert.equal(f.read().reservations[0].breakfast.main,'pancakes');assert.deepEqual(app.errors,[]);
+ }finally{app.w.close();}
+});
+test('cambiar tamaño reconstruye elecciones y la decoración de eventos exige temática',async()=>{
+ const f=await setup(),app=await application(f,'explorer');
+ try{
+  app.click('[data-page="create"]');await until(()=>app.w.document.querySelector('[data-size="large"]'));app.click('[data-size="large"]');
+  let form=app.w.document.querySelector('#reservation-form');const size=form.elements.namedItem('breakfastSize');size.value='medium';size.dispatchEvent(new app.w.Event('change',{bubbles:true}));assert.equal(form.elements.namedItem('breakfastMain').value,'both');assert.equal(form.elements.namedItem('breakfastSide').options.length,2);
+  app.click('[data-action="close-modal"]');app.click('[data-product="Decoración de eventos"]');form=app.w.document.querySelector('#reservation-form');assert.equal(form.elements.namedItem('eventTheme').required,true);assert.equal(form.elements.namedItem('deliveryMethod').value,'delivery');
+  for(const [key,value] of Object.entries({eventTheme:'Floral lavanda',eventGuests:'30',recipient:'Ana de prueba',contactPhone:'3001234567',address:'Salón de prueba 123',message:'Montaje antes del evento'}))form.elements.namedItem(key).value=value;
+  app.submit(form);await until(()=>app.w.document.querySelector('.whatsapp-btn'));const text=app.w.document.querySelector('.order-message').textContent;assert.ok(text.includes('Floral lavanda'));assert.ok(text.includes('30'));assert.deepEqual(app.errors,[]);
+ }finally{app.w.close();}
+});
+test('presentación abre video completo con controles y permite navegar por capítulos',async()=>{
+ const f=await setup(),app=await application(f,'explorer');
+ try{
+  assert.ok(app.w.document.querySelector('[data-showcase-preview]'));app.click('[data-action="watch-video"]');
+  const video=app.w.document.querySelector('#presentation-video');assert.equal(video.controls,true);assert.ok(video.src.endsWith('milfiguras-presentacion-v1.mp4'));assert.equal(app.w.document.querySelectorAll('[data-video-time]').length,4);
+  app.click('[data-video-time="16"]');assert.equal(video.currentTime,16);assert.match(app.w.document.querySelector('.video-caption').textContent,/no representan resultados/);
+  app.click('[data-action="close-modal"]');app.click('[data-page="create"]');await until(()=>app.w.document.querySelector('[data-size]'));app.click('[data-size="large"]');assert.equal(app.w.document.querySelector('.video-dialog'),null);assert.deepEqual(app.errors,[]);
+ }finally{app.w.close();}
+});
+
+test('menú móvil cierra con Escape, fondo y navegación; restaura el foco y libera el contenido',async()=>{
+ const f=await setup(),app=await application(f,'explorer');
+ try{
+  const w=app.w,doc=w.document;w.matchMedia=query=>({matches:query.includes('1024')});
+  const trigger=()=>doc.querySelector('[data-action="menu"]');
+  app.click('[data-action="menu"]');assert.equal(trigger().getAttribute('aria-expanded'),'true');assert.equal(doc.querySelector('.navigation-backdrop').hidden,false);assert.equal(doc.querySelector('.sidebar').inert,false);assert.ok(doc.body.classList.contains('navigation-open'));assert.equal(doc.activeElement,doc.querySelector('.sidebar-close'));
+  doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Tab',shiftKey:true,bubbles:true,cancelable:true}));assert.equal(doc.activeElement,doc.querySelector('.sidebar-footer .logout'));
+  doc.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));assert.equal(trigger().getAttribute('aria-expanded'),'false');assert.equal(doc.querySelector('.sidebar').inert,true);assert.equal(doc.activeElement,trigger());assert.ok(!doc.body.classList.contains('navigation-open'));
+  app.click('[data-action="menu"]');app.click('.navigation-backdrop');assert.equal(doc.querySelector('.navigation-backdrop').hidden,true);
+  app.click('[data-action="menu"]');app.click('[data-page="orders"]');await until(()=>doc.querySelector('[data-page="orders"].active'));assert.equal(trigger().getAttribute('aria-expanded'),'false');assert.ok(!doc.body.classList.contains('navigation-open'));
+  w.matchMedia=()=>({matches:false});w.dispatchEvent(new w.Event('resize'));assert.equal(doc.querySelector('.sidebar').inert,false);assert.equal(doc.querySelector('.navigation-backdrop').hidden,true);assert.deepEqual(app.errors,[]);
+ }finally{app.w.close();}
+});
+test('reservas incluyen etiquetas para su lectura como tarjetas en el celular',async()=>{
+ const f=await setup(),cookie=await f.login();await f.request('reservations',sampleOrder(),cookie);const app=await application(f,'explorer');
+ try{
+  app.click('[data-page="orders"]');await until(()=>app.w.document.querySelector('.reservations-table'));
+  const labels=[...app.w.document.querySelectorAll('.reservations-table tbody td')].map(td=>td.dataset.label);
+  assert.deepEqual(labels,['DETALLE','ENTREGA · COLOMBIA','ESTADO','PUNTOS Y PEDIDO']);assert.ok(app.w.document.querySelector('.profile-trigger-copy').textContent.length>0);
+ }finally{app.w.close();}
+});
+
+test('la actualización automática respeta los menús abiertos y se reanuda al cerrarlos',async()=>{
+ const f=await setup(),app=await application(f,'explorer');
+ try{
+  app.click('[data-action="menu"]');let before=app.calls.length;await vm.runInContext('syncVisibleState()',app.dom.getInternalVMContext());assert.equal(app.calls.length,before);assert.ok(app.w.document.querySelector('.sidebar.open'));
+  app.click('.navigation-backdrop');app.click('[data-action="profile-menu"]');before=app.calls.length;await vm.runInContext('syncVisibleState()',app.dom.getInternalVMContext());assert.equal(app.calls.length,before);assert.equal(app.w.document.querySelector('#profile-dropdown').hidden,false);
+  app.click('[data-action="profile-menu"]');await vm.runInContext('syncVisibleState()',app.dom.getInternalVMContext());assert.ok(app.calls.length>before);assert.deepEqual(app.errors,[]);
+ }finally{app.w.close();}
 });

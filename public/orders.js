@@ -1,3 +1,11 @@
+function orderConfigurationLines(order){
+ const lines=[];
+ if(order.breakfast){lines.push(...globalThis.MilfigurasCatalog.breakfastLines(order.breakfast));if(order.breakfast.main!=='pancakes')lines.push('Sándwich: '+globalThis.MilfigurasCatalog.sandwichIngredients.join(', ')+'.');}
+ if(order.eventDetails){lines.push('Temática: '+order.eventDetails.theme);if(order.eventDetails.guests)lines.push('Asistentes aproximados: '+order.eventDetails.guests);}
+ if(order.giftDetails)lines.push('Regalo y decoración: '+order.giftDetails);
+ return lines;
+}
+function orderDetailsMarkup(order){return orderConfigurationLines(order).map(line=>`<small class="order-configuration">${esc(line)}</small>`).join('');}
 const ORDER_WHATSAPP='573044817781';
 function orderReference(order){return order.reference||'MFG-'+order.id.slice(0,8).toUpperCase();}
 function orderMessage(order,user){
@@ -9,12 +17,13 @@ function orderMessage(order,user){
     '*Cliente:* '+(user?.name||order.customer||'Cliente del club'),
     '*Celular de contacto:* '+(order.contactPhone||'Por confirmar'),
     '*Detalle:* '+order.product,
+    ...orderConfigurationLines(order),
     '*Ocasión:* '+order.occasion,
     '*Para:* '+order.recipient,
     '*Fecha y hora (Colombia):* '+delivery,
     '*Color:* '+order.color,
     '*Entrega:* '+(order.deliveryMethod==='pickup'?'Recogida coordinada con Milfiguras':'Domicilio · '+(order.address||'Dirección por confirmar')),
-    '*Mensaje de la tarjeta:* '+order.message,
+    (order.service==='event'?'*Observaciones:* ':'*Mensaje de la tarjeta:* ')+order.message,
     '', '*Estado en el club:* '+({pending:'Solicitud pendiente de confirmación',confirmed:'Reserva confirmada',cancelled:'Solicitud cancelada'}[order.status]||order.status),
     'Por favor, confirmemos el precio final, la disponibilidad y los detalles de entrega. ¡Gracias!'
   ].join('\n');

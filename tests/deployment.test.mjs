@@ -50,6 +50,12 @@ test('el servidor publica rutas seguras, conserva datos al reiniciar y aplica HT
  try{
   app=await launch(env);
   assert.equal((await fetch(app.base+'/healthz')).status,200);
+  for(const asset of ['/catalog.js','/showcase.js','/showcase.css','/responsive.css','/media/milfiguras-poster-v1.webp'])assert.equal((await fetch(app.base+asset)).status,200);
+  const media=app.base+'/media/milfiguras-presentacion-v1.mp4';let clip=await fetch(media,{headers:{Range:'bytes=0-1023'}});assert.equal(clip.status,206);assert.equal((await clip.arrayBuffer()).byteLength,1024);assert.equal(clip.headers.get('Content-Type'),'video/mp4');assert.match(clip.headers.get('Content-Range'),/^bytes 0-1023\//);
+  clip=await fetch(media,{method:'HEAD'});assert.equal(clip.status,200);const total=Number(clip.headers.get('Content-Length'));assert.ok(total>100000);assert.equal((await clip.arrayBuffer()).byteLength,0);
+  clip=await fetch(media,{headers:{Range:'bytes=-256'}});assert.equal(clip.status,206);assert.equal((await clip.arrayBuffer()).byteLength,256);
+  for(const range of ['bytes=999999999-','bytes=90-10','bytes=-0','bytes=0-1,4-5','invalid'])assert.equal((await fetch(media,{headers:{Range:range}})).status,416);
+
   let login=await request(app.base,'/api/login',{email:env.ADMIN_EMAIL,password:env.ADMIN_PASSWORD});assert.equal(login.status,200);let cookie=login.headers.get('set-cookie').split(';')[0];
   assert.equal((await request(app.base,'/api/profile',{name:'Administración persistente',email:env.ADMIN_EMAIL},cookie)).status,200);
   for(const route of ['/data/ACCESO-ADMIN.txt','/data/milfiguras.sqlite','/.env','/.openai/hosting.json'])assert.equal((await fetch(app.base+route)).status,404);

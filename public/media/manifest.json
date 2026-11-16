@@ -1,0 +1,51 @@
+{
+  "source": {
+    "name": "WhatsApp Video 2026-11-16 at 3.05.11 PM.mp4",
+    "sha256": "b3f901f5b1536eb8b34849ffcf769cdcf939c43838c301dd3ca09cbe3017bf4d",
+    "bytes": 103702247,
+    "duration_seconds": 45.0,
+    "dimensions": "3840x2160",
+    "fps": 30,
+    "audio": "AAC stereo 48 kHz",
+    "provenance": "Video supplied by the project owner for publication in the Milfiguras website."
+  },
+  "full": {
+    "path": "public/media/milfiguras-presentacion-v1.mp4",
+    "dimensions": "1280x720",
+    "speed": 1.0,
+    "source_range": [
+      0,
+      45.0
+    ],
+    "audio": "Original track, re-encoded AAC 96 kbps"
+  },
+  "preview": {
+    "path": "public/media/milfiguras-avance-v1.mp4",
+    "dimensions": "960x540",
+    "speed": 1.0,
+    "source_range": [
+      0,
+      14
+    ],
+    "audio": false
+  },
+  "poster": {
+    "path": "public/media/milfiguras-poster-v1.webp",
+    "source_time": 5.4
+  },
+  "outputs": {
+    "full": {
+      "bytes": 2652330,
+      "sha256": "01c98f8df66a5c8a729e92fcdb969f139689c1283b7d2e3e4c46e6953cabe653"
+    },
+    "preview": {
+      "bytes": 398567,
+      "sha256": "e35efd5ea4ac32b63a7632bebb7980383f8c4b70ff7726abfe81483acbcdd8bc"
+    },
+    "poster": {
+      "bytes": 28430,
+      "sha256": "b5e7b619993ba55e5d8f1e29f728218c3d2f3a467b4077774b4ca3d62c41fbd4"
+    }
+  },
+  "review": "Technical metadata, representative frames and complete decode checked. Full audiovisual listening review is separate."
+}
