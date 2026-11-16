@@ -6,7 +6,7 @@ Aplicación con reservas personalizadas, seguimiento de pedidos, fidelización y
 
 El código está preparado para el repositorio [CamiloOliva/MilFiguritas](https://github.com/CamiloOliva/MilFiguritas). Incluye Docker, configuración de Render y pruebas de GitHub Actions. Consulta [la guía de despliegue](docs/DESPLIEGUE.md) para obtener una URL pública con la API y la base de datos funcionando.
 
-[Preparar despliegue en Render](https://render.com/deploy?repo=https://github.com/CamiloOliva/MilFiguritas) · Requiere revisar y aprobar un servicio de pago con disco persistente.
+[Desplegar gratis para pruebas en Render](https://render.com/deploy?repo=https://github.com/CamiloOliva/MilFiguritas) · Plan Free, sin disco de pago. Los datos de prueba son temporales y pueden perderse al suspender o reiniciar el servicio.
 
 ## Ejecutar
 

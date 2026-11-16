@@ -8,23 +8,25 @@ Esta aplicación ejecuta una API Node.js y guarda información en SQLite. [GitHu
 
 El proyecto incluye dos alternativas: un Blueprint de Render y una imagen Docker. Ambas sirven la interfaz y la API desde el mismo dominio.
 
-## Render desde GitHub
+## Render gratis para pruebas breves
 
-[Preparar despliegue en Render](https://render.com/deploy?repo=https://github.com/CamiloOliva/MilFiguritas)
+[Desplegar gratis en Render](https://render.com/deploy?repo=https://github.com/CamiloOliva/MilFiguritas)
 
-Este enlace solo funcionará cuando el código y `render.yaml` estén en el repositorio. Permite revisar los recursos antes de aprobar su creación. [Funcionamiento del botón de Render](https://render.com/docs/deploy-to-render).
+El enlace prepara el despliegue desde el repositorio. Permite revisar el servicio antes de crearlo. [Funcionamiento del botón de Render](https://render.com/docs/deploy-to-render).
 
 1. Conecta tu cuenta de Render con el repositorio de GitHub.
-2. Crea un Blueprint desde el repositorio. La configuración utiliza Node.js 24.22.1, una instancia y un disco persistente de 1 GB en `/var/data`.
+2. Crea un Blueprint desde el repositorio. La configuración utiliza Node.js 24.22.1 y una instancia **Free**, sin disco de pago.
 3. Introduce `ADMIN_EMAIL` y `ADMIN_PASSWORD` en el panel privado de Render. La contraseña inicial debe tener de 12 a 120 caracteres, mayúsculas, minúsculas y números. No la escribas en GitHub.
-4. Revisa el costo y aprueba la creación del servicio cuando corresponda. **La configuración usa un plan Starter de pago**: Render requiere un servicio de pago para añadir [almacenamiento persistente](https://render.com/docs/disks). No se ha contratado ni desplegado automáticamente ningún servicio.
+4. Comprueba que el servicio indique **Free** y crea el despliegue. No añadas discos ni elijas planes de pago para estas pruebas.
 5. Render proporcionará una URL HTTPS. La aplicación utiliza `RENDER_EXTERNAL_URL` para configurar el origen y las cookies seguras. Si añades un dominio propio, establece `PUBLIC_ORIGIN` con ese dominio, por ejemplo `https://club.tu-dominio.com`, sin rutas.
 6. Abre la URL y entra con las credenciales que definiste. La instalación de producción comienza con la cuenta administrativa y sin clientes de demostración. Cambia la contraseña desde el perfil si utilizaste una inicial temporal.
-7. Crea una cuenta de cliente desde otro navegador y comprueba reservas, confirmación, puntos y WhatsApp. Verifica que los datos persistan después de un reinicio.
+7. Crea una cuenta de cliente desde otro navegador y comprueba reservas, confirmación, puntos y WhatsApp. Render mostrará una URL HTTPS que podrás compartir para las pruebas.
+
+**Los datos son temporales.** Render Free puede suspender el servicio tras 15 minutos sin actividad y su sistema de archivos es efímero. Las cuentas, fotografías y pedidos de prueba pueden perderse al suspender, reiniciar o volver a desplegar. La siguiente visita también puede tardar mientras despierta el servidor. Usa esta opción para pruebas funcionales breves, no para recopilar un piloto de varios días que deba conservar información. [Límites oficiales de Render Free](https://render.com/docs/free).
 
 Las siguientes publicaciones desde GitHub se configuran para desplegar cuando pasen las comprobaciones de CI. El flujo comprueba reglas, API, interfaz, configuración y arranque en Docker. Consulta la [referencia de Blueprints](https://render.com/docs/blueprint-spec) para ajustar el plan o desactivar los despliegues automáticos.
 
-No elimines el disco ni cambies su ruta para actualizar el código. La contraseña de entorno inicializa una instalación nueva; no sustituye la contraseña guardada en una base de datos existente en cada publicación.
+La contraseña de entorno inicializa cada instalación nueva. En el plan gratuito, si se pierde el almacenamiento temporal, se vuelve a crear la cuenta administrativa con `ADMIN_EMAIL` y `ADMIN_PASSWORD`. Las credenciales del equipo local no se transfieren al alojamiento. Para conservar datos entre reinicios, usa Docker con un volumen persistente u otro alojamiento con almacenamiento duradero.
 
 ## Docker
 

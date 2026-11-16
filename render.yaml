@@ -2,7 +2,7 @@ services:
   - type: web
     name: milfiguras-bga
     runtime: node
-    plan: starter
+    plan: free
     numInstances: 1
     buildCommand: node --check server.mjs
     startCommand: node server.mjs
@@ -18,12 +18,8 @@ services:
       - key: PORT
         value: 10000
       - key: DATA_DIR
-        value: /var/data
+        value: ./data
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-    disk:
-      name: milfiguras-data
-      mountPath: /var/data
-      sizeGB: 1
