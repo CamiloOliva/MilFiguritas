@@ -160,3 +160,17 @@ test('la actualización automática respeta los menús abiertos y se reanuda al 
   app.click('[data-action="profile-menu"]');await vm.runInContext('syncVisibleState()',app.dom.getInternalVMContext());assert.ok(app.calls.length>before);assert.deepEqual(app.errors,[]);
  }finally{app.w.close();}
 });
+
+test('precios fijos visibles cambian con el tamaño y llegan al resumen; otros servicios se cotizan',async()=>{
+ const f=await setup(),app=await application(f,'explorer');
+ try{
+  app.click('[data-page="create"]');await until(()=>app.w.document.querySelector('[data-size="large"]'));
+  assert.deepEqual([...app.w.document.querySelectorAll('.breakfast-price strong')].map(el=>el.textContent),['$150.000 COP','$100.000 COP','$80.000 COP']);
+  assert.equal(app.w.document.querySelectorAll('.service-quote').length,2);assert.match(app.w.document.querySelector('.service-quote').textContent,/WhatsApp/);
+  app.click('[data-size="large"]');const form=app.w.document.querySelector('#reservation-form');assert.match(form.querySelector('.configuration-price').textContent,/150\.000 COP/);
+  const size=form.elements.namedItem('breakfastSize');size.value='medium';size.dispatchEvent(new app.w.Event('change',{bubbles:true}));assert.match(form.querySelector('.configuration-price').textContent,/100\.000 COP/);
+  for(const [key,value] of Object.entries({recipient:'Persona de prueba',contactPhone:'3001234567',address:'Calle de prueba 123',message:'Feliz cumpleaños'}))form.elements.namedItem(key).value=value;
+  app.submit(form);await until(()=>app.w.document.querySelector('.whatsapp-btn'));const message=new URL(app.w.document.querySelector('.whatsapp-btn').href).searchParams.get('text');assert.ok(message.includes('Precio fijo del desayuno: $100.000 COP'));assert.ok(!message.includes('confirmemos el precio final'));assert.equal(f.read().reservations[0].pricing.amount,100000);
+  app.click('[data-action="close-modal"]');app.click('[data-page="create"]');await until(()=>app.w.document.querySelector('[data-product="Caja de Momentos"]'));app.click('[data-product="Caja de Momentos"]');assert.match(app.w.document.querySelector('#reservation-form').textContent,/El precio varía.*WhatsApp/);assert.deepEqual(app.errors,[]);
+ }finally{app.w.close();}
+});

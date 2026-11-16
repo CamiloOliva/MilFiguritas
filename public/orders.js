@@ -1,5 +1,8 @@
 function orderConfigurationLines(order){
- const lines=[];
+ const catalog=globalThis.MilfigurasCatalog,lines=[];
+ if(order.pricing?.kind==='fixed'&&Number.isSafeInteger(order.pricing.amount))lines.push('Precio fijo del desayuno: '+catalog.formatPrice(order.pricing.amount));
+ else if(catalog.serviceFor(order.product)==='breakfast')lines.push('Precio del desayuno: por confirmar por WhatsApp (pedido anterior).');
+ else lines.push(catalog.quoteNote);
  if(order.breakfast){lines.push(...globalThis.MilfigurasCatalog.breakfastLines(order.breakfast));if(order.breakfast.main!=='pancakes')lines.push('Sándwich: '+globalThis.MilfigurasCatalog.sandwichIngredients.join(', ')+'.');}
  if(order.eventDetails){lines.push('Temática: '+order.eventDetails.theme);if(order.eventDetails.guests)lines.push('Asistentes aproximados: '+order.eventDetails.guests);}
  if(order.giftDetails)lines.push('Regalo y decoración: '+order.giftDetails);
@@ -25,13 +28,13 @@ function orderMessage(order,user){
     '*Entrega:* '+(order.deliveryMethod==='pickup'?'Recogida coordinada con Milfiguras':'Domicilio · '+(order.address||'Dirección por confirmar')),
     (order.service==='event'?'*Observaciones:* ':'*Mensaje de la tarjeta:* ')+order.message,
     '', '*Estado en el club:* '+({pending:'Solicitud pendiente de confirmación',confirmed:'Reserva confirmada',cancelled:'Solicitud cancelada'}[order.status]||order.status),
-    'Por favor, confirmemos el precio final, la disponibilidad y los detalles de entrega. ¡Gracias!'
+    order.pricing?.kind==='fixed'?'Por favor, confirmemos la disponibilidad y los detalles de entrega. ¡Gracias!':'Por favor, acordemos el precio por WhatsApp según lo solicitado y coordinemos la disponibilidad y la entrega. ¡Gracias!'
   ].join('\n');
 }
 function orderWhatsAppLink(order,user){return 'https://wa.me/'+ORDER_WHATSAPP+'?text='+encodeURIComponent(orderMessage(order,user));}
 function orderSummaryModal(order){
   const message=orderMessage(order,state.user);
-  modal('Tu pedido está registrado',`<div class="notice success">Referencia <strong>${esc(orderReference(order))}</strong>. El equipo podrá revisarla desde administración.</div><p class="small muted">Continúa por WhatsApp con el equipo de pedidos al <strong>304 481 7781</strong>. Se abrirá el chat con este mensaje; revísalo y pulsa <strong>Enviar</strong> en WhatsApp.</p><pre class="order-message">${esc(message)}</pre><div class="order-share-actions"><a class="btn whatsapp-btn" href="${esc(orderWhatsAppLink(order,state.user))}" target="_blank" rel="noopener noreferrer">Abrir pedido en WhatsApp ${icon('arrow')}</a><button type="button" class="btn secondary" data-copy-order="${esc(order.id)}">${icon('copy')} Copiar resumen</button></div><p class="tiny muted" style="line-height:1.7;margin:16px 0 0">El precio y la entrega se acuerdan con Milfiguras. Abrir o copiar este resumen no confirma que el mensaje haya sido enviado. También puedes volver a abrirlo desde Mis reservas.</p>`);
+  modal('Tu pedido está registrado',`<div class="notice success">Referencia <strong>${esc(orderReference(order))}</strong>. El equipo podrá revisarla desde administración.</div><p class="small muted">Continúa por WhatsApp con el equipo de pedidos al <strong>304 481 7781</strong>. Se abrirá el chat con este mensaje; revísalo y pulsa <strong>Enviar</strong> en WhatsApp.</p><pre class="order-message">${esc(message)}</pre><div class="order-share-actions"><a class="btn whatsapp-btn" href="${esc(orderWhatsAppLink(order,state.user))}" target="_blank" rel="noopener noreferrer">Abrir pedido en WhatsApp ${icon('arrow')}</a><button type="button" class="btn secondary" data-copy-order="${esc(order.id)}">${icon('copy')} Copiar resumen</button></div><p class="tiny muted" style="line-height:1.7;margin:16px 0 0">${order.pricing?.kind==='fixed'?'El desayuno tiene precio fijo. La disponibilidad y la entrega se coordinan con Milfiguras.':globalThis.MilfigurasCatalog.quoteNote} Abrir o copiar este resumen no confirma que el mensaje haya sido enviado. También puedes volver a abrirlo desde Mis reservas.</p>`);
 }
 
 document.addEventListener('click',async event=>{

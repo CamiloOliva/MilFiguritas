@@ -29,3 +29,17 @@ test('API conserva composición y personalización, rechaza combinaciones altera
  for(const breakfast of [{...base,size:'small'},{...base,size:'medium'},{...base,drink:'beer'}]){result=await f.request('reservations',sampleOrder({breakfast}),cookie);assert.equal(result.status,400);}
  result=await f.request('reservations',sampleOrder({product:'Decoración de eventos',eventDetails:{theme:'Cumpleaños floral',guests:25},color:'Personalizada'}),cookie);assert.equal(result.status,200);assert.equal(result.body.reservation.eventDetails.guests,25);assert.equal(result.body.reservation.color,'Personalizada');assert.equal(f.read().reservations.length,2);
 });
+
+test('el servidor fija los precios por tamaño e ignora importes enviados por el cliente',async()=>{
+ const f=await setup(),cookie=await f.login();
+ for(const [size,amount] of [['large',150000],['medium',100000],['small',80000]]){
+  const breakfast={...base,size,main:size==='small'?'sandwich':'both',side:size==='large'?'both':'fruit'};
+  const result=await f.request('reservations',sampleOrder({breakfast,price:1,pricing:{kind:'fixed',amount:1,currency:'USD'}}),cookie);
+  assert.equal(result.status,200);assert.deepEqual(result.body.reservation.pricing,{kind:'fixed',amount,currency:'COP'});
+  assert.deepEqual(f.read().reservations.at(-1).pricing,{kind:'fixed',amount,currency:'COP'});
+ }
+ for(const product of ['Caja de Momentos','Decoración de eventos']){
+  const result=await f.request('reservations',sampleOrder({product,eventDetails:{theme:'Floral'},pricing:{kind:'fixed',amount:500}}),cookie);
+  assert.equal(result.status,200);assert.deepEqual(result.body.reservation.pricing,{kind:'quote',amount:null,currency:'COP'});
+ }
+});

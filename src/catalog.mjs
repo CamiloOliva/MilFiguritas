@@ -25,14 +25,14 @@ export function validateServiceOptions(input){
   const service=serviceFor(input.product);
   requireThat(service,'Selecciona un servicio del catálogo.');
   const giftDetails=input.giftDetails?text(input.giftDetails,1,240):'';
-  if(service==='breakfast')return {service,breakfast:validateBreakfast(input.breakfast),giftDetails};
+  if(service==='breakfast'){const breakfast=validateBreakfast(input.breakfast);return {service,breakfast,giftDetails,pricing:{kind:'fixed',amount:catalog.breakfastSizes.find(size=>size.id===breakfast.size).price,currency:'COP'}};}
   if(service==='event'){
     const value=input.eventDetails;
     requireThat(value&&typeof value==='object'&&!Array.isArray(value),'Completa los datos de la decoración de tu evento.');
     requireThat(input.deliveryMethod==='delivery','Indica el lugar donde se realizará la decoración del evento.');
     const theme=text(value.theme,2,120);
     const guests=value.guests===undefined||value.guests===null||value.guests===''?null:positiveInteger(value.guests,5000);
-    return {service,eventDetails:{theme,guests},giftDetails};
+    return {service,eventDetails:{theme,guests},giftDetails,pricing:{kind:'quote',amount:null,currency:'COP'}};
   }
-  return {service,giftDetails};
+  return {service,giftDetails,pricing:{kind:'quote',amount:null,currency:'COP'}};
 }
