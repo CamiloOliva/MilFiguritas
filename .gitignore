@@ -1,0 +1,16 @@
+data/
+dist/
+output/
+*.log
+.env
+.env.*
+!.env.example
+node_modules/
+.openai/
+*.sqlite
+*.sqlite-*
+*.db
+coverage/
+ACCESO-ADMIN.txt
+.DS_Store
+Thumbs.db

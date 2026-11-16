@@ -1,0 +1,17 @@
+.git
+.github
+.openai
+node_modules
+data
+dist
+output
+coverage
+.env
+.env.*
+*.sqlite
+*.sqlite-*
+*.db
+**/ACCESO-ADMIN.txt
+tests
+docs
+*.log

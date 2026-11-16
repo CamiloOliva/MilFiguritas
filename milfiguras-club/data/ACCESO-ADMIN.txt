@@ -1,8 +1,0 @@
-MILFIGURAS BGA · ACCESO PRIVADO DE ADMINISTRACIÓN
-
-Correo: admin@milfiguras.demo
-Contraseña inicial: d50c231d-66f7-42d5-9f88-36eecd76d792Aa9!
-
-Ingresa en http://127.0.0.1:3000 y cambia la contraseña desde el menú del perfil → Cambiar contraseña.
-Esta es una clave inicial: si ya la cambiaste, usa tu nueva contraseña.
-No compartas este archivo. No está disponible desde el sitio web.
