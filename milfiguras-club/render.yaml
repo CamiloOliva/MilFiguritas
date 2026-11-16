@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: milfiguras-bga
+    runtime: node
+    plan: starter
+    numInstances: 1
+    buildCommand: node --check server.mjs
+    startCommand: node server.mjs
+    autoDeployTrigger: checksPass
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.22.1
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+    disk:
+      name: milfiguras-data
+      mountPath: /var/data
+      sizeGB: 1

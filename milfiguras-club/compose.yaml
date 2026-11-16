@@ -1,0 +1,18 @@
+services:
+  milfiguras:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATA_DIR: /app/data
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:3000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Configura ADMIN_EMAIL en .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Configura una clave privada ADMIN_PASSWORD en .env}
+    volumes:
+      - milfiguras-data:/app/data
+    restart: unless-stopped
+volumes:
+  milfiguras-data:
