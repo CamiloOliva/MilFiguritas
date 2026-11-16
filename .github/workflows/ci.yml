@@ -27,7 +27,7 @@ jobs:
       - name: Comprobar arranque y volumen de datos
         run: |
           docker run --detach --name milfiguras-ci --publish 127.0.0.1:3001:3000 --env PUBLIC_ORIGIN=http://localhost:3001 --env ADMIN_EMAIL=admin@example.test --env ADMIN_PASSWORD=TestDocker2026! --volume milfiguras-ci-data:/app/data milfiguras:test
-          curl --fail --retry 15 --retry-connrefused --retry-delay 1 http://127.0.0.1:3001/healthz
+          curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 1 --max-time 5 http://127.0.0.1:3001/healthz
       - if: always()
         run: |
           docker logs milfiguras-ci || true
